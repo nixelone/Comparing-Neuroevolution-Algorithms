@@ -26,12 +26,8 @@ def log(x):
 
 
 def sigmoid(x):
-    if x >= 0:
-        z = np.exp(-x)
-        return 1 / (1 + z)
-    else:
-        z = np.exp(x)
-        return z / (1 + z)
+    x = np.clip(x, -100, 100)
+    return 1 / (1 + np.exp(-x))
 
 
 def sin(x):
