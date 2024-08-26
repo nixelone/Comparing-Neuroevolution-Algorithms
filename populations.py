@@ -285,3 +285,11 @@ class DifferentialEvolutionNetworkPopulation(NeuralNetworkPopulation):
     def __str__(self):
         return f'A NEFT population of {self._de_config.population_size} individuals that has been trained ' \
                f'for {self._n_generations} generations by differential evolution'
+
+
+populations = {
+    'NEAT': NEATPopulation,
+    'HyperNEAT': HyperNEATPopulation2D,
+    'CMA-ES': CMAESNetworkPopulation,
+    'Differential Evolution': DifferentialEvolutionNetworkPopulation
+}
