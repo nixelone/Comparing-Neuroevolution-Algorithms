@@ -1,0 +1,8 @@
+num_inputs = 8
+num_outputs = 4
+hidden_layers =  2
+hidden_layer_size = 5
+activation_hidden = sigmoid
+activation_output = sigmoid
+population_size = 64
+bound = 10
