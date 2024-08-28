@@ -1,3 +1,8 @@
+"""
+This module contains implementations of basic activation functions and a
+dictionary that allows for retrieval of a function using its string name
+"""
+
 import numpy as np
 
 
@@ -26,6 +31,7 @@ def log(x):
 
 
 def sigmoid(x):
+    # clip the value of x to prevent overflow
     x = np.clip(x, -100, 100)
     return 1 / (1 + np.exp(-x))
 
