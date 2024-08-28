@@ -1,3 +1,13 @@
+"""
+This is the main module of the whole program that implements the GUI.
+
+The GUI is implemented in tkinter, and functions that are assigned to widgets but
+are not related to the GUI are imported from other modules of this program.
+
+In order for the user to be able to use the GUI window while an algorithm is being trained,
+the training function is implemented in such a way that it runs on a different thread.
+"""
+
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -15,7 +25,15 @@ from config_manipulator import restore_all_default_configs
 
 
 class MainWindow(tk.Tk):
+    """
+    Class that implements the main GUI window with a sidebar and tkinter Canvas
+    """
     def __init__(self, width=1200, height=600, sidebar_width=400):
+        """
+        Calls the __init__ method of parent class tkinter.Tk,
+        sets the class variables, calls _render_gui_elements
+        to render window widgets and starts the main loop
+        """
         super().__init__()
 
         # set basic geometry variables
@@ -73,6 +91,10 @@ class MainWindow(tk.Tk):
         self.mainloop()
 
     def _render_gui_elements(self):
+        """
+        Initializes all of the window widgets, calls _draw_sidebar
+        to render the sidebar widgets and renders the Canvas
+        """
 
         # initialize list that will contain all sidebar elements
         sidebar_rows = []
@@ -173,12 +195,18 @@ class MainWindow(tk.Tk):
         )
 
     def _draw_sidebar(self, sidebar_rows):
+        """
+        Takes a list of tuples of widgets as argument
+        and renders the widgets in rows on the sidebar
+        """
 
         n_rows = len(sidebar_rows)
         for i in range(n_rows):
             n_columns = len(sidebar_rows[i])
 
             for j in range(n_columns):
+                # divide the row into equal sized columns
+                # and render each row wiget in one column
                 sidebar_rows[i][j].place(
                     x=self.sidebar_width // n_columns * j,
                     y=self.height // n_rows * i,
@@ -187,6 +215,9 @@ class MainWindow(tk.Tk):
                 )
 
     def _display_message(self, text):
+        """
+        Clears the canvas and displays a text message in the middle of it
+        """
         self.canvas.delete('all')
 
         self.canvas.create_text(
@@ -201,19 +232,28 @@ class MainWindow(tk.Tk):
         self.canvas.update()
 
     def _render_game(self, network):
+        """
+        Creates a new game, calls a generator that yields frames
+        that are rendered in the Canvas
+        """
         DELAY_MILLISECONDS = 30  # delay 30ms gives approximately 30fps
 
+        # create new game
         environment = render_game(self.environment.get(), network)
-        rendered_frame = next(environment)
 
+        rendered_frame = next(environment)
         frame_height = rendered_frame.shape[0]
         frame_width = rendered_frame.shape[1]
+
         while rendered_frame is not None:
+            # wait until a new frame can be rendered
             self.after(DELAY_MILLISECONDS)
 
+            # convert the frame to tkinter-compatible format
             frame = Image.fromarray(rendered_frame)
             photo = ImageTk.PhotoImage(image=frame)
 
+            # render the image
             self.canvas.delete('all')
             self.canvas.create_image(
                 (self.width - self.sidebar_width - frame_width) // 2,
@@ -222,16 +262,30 @@ class MainWindow(tk.Tk):
                 image=photo
             )
             self.canvas.update()
+
+            # request new frame
             rendered_frame = next(environment)
 
+        # clear the Canvas once the game is over
+        self.canvas.delete('all')
+
     def play_game(self):
+        """
+        Disables the main button and renders a game with the evolved network
+
+        This method is called when "Play Game" button is pressed
+        """
+
+        # disable main button for the game
         self.main_button.config(
             state=tk.DISABLED
         )
 
+        # get the network and start rendering the game
         network = self.queue.get()
         self._render_game(network)
 
+        # reset main button to its initial state
         self.main_button.config(
             command=self.run_training,
             text='Train',
@@ -239,7 +293,15 @@ class MainWindow(tk.Tk):
         )
 
     def _wait_for_training(self):
-        CHECKING_FREQUENCY = 500
+        """
+        Periodically checks for whether the algorithm is being trained
+
+        Once it is trained, it lets the user know and enables a button
+        to play a game with the evolved network
+
+        This method is called periodically while algorithm is being trained
+        """
+        CHECKING_FREQUENCY = 500  # the method is called every 0.5s while the algorithm is being trained
 
         if self.queue.empty():
             self.after(CHECKING_FREQUENCY, self._wait_for_training)
@@ -252,27 +314,57 @@ class MainWindow(tk.Tk):
             )
 
     def _train_algorithm(self):
+        """
+        Calls function evolve_network from module environment_functions
+        in order to evolve a network to solve the given game
+
+        Puts the network in Queue so the main thread can access it
+        """
         environment_name = self.environment.get()
         algorithm_name = self.algorithm.get()
         n_generations = self.n_generations.get()
         reporter = self.report_stats.get()
         multiprocessing = self.use_multiprocessing.get()
 
-        evolved_network = evolve_network(environment_name, algorithm_name, n_generations, multiprocessing, reporter)
+        evolved_network = evolve_network(
+            environment_name,
+            algorithm_name,
+            n_generations,
+            multiprocessing,
+            reporter
+        )
+        # put the final network in queue so the other thread can get it
         self.queue.put(evolved_network)
 
     def run_training(self):
+        """
+        Starts training the algorithm in a different thread
+        and calls _wait_for_training to periodically check
+        for whether the training has finished
+
+        This method is called when "Train" button is pressed
+        """
+
+        # start the training
         computation_thread = threading.Thread(target=self._train_algorithm)
         computation_thread.start()
 
         self._display_message('Training...')
         self.main_button.config(state=tk.DISABLED)
+
+        # start waiting for the training to finish
         self._wait_for_training()
 
     def edit_config(self):
+        """
+        Opens config file corresponding to the given environment and algorithm
+        in the default text editor
+
+        The command is based on the user's operating system
+        """
         config_path = get_config_file_path(self.environment.get(), self.algorithm.get())
 
-        # open the config file in a text editor (command is based on the user's operating system)
+        # open the config file in a text editor
         if sys.platform == 'win32':  # For Windows
             os.startfile(config_path)
         elif sys.platform == 'darwin':  # For macOS
@@ -283,8 +375,15 @@ class MainWindow(tk.Tk):
             raise NotImplementedError("Unsupported operating system")
 
     def restore_config(self):
+        """
+        Calls function restore_default_config from module
+        config_manipulator to reset config file that corresponds
+        to the given environment and algorithm to default
+        """
         restore_default_config(self.environment.get(), self.algorithm.get())
 
 
 if __name__ == '__main__':
+
+    # start the program
     window = MainWindow()
