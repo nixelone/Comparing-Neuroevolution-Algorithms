@@ -128,7 +128,7 @@ class HyperNEATPopulation2D(NEATTypePopulation):
         super().__init__(config_file, reporter)
         self.substrate_config = create_hyperneat_substrate_config(config_file)
 
-    @staticmethod  # should it be a classmethod when I am not using cls? Why not find a way to make it static, even though it is abstract
+    @staticmethod
     def _process_config(config_file):
         cppn_config = create_hyperneat_cppn_config(config_file, n_substrate_dimensions=2)
         return cppn_config
