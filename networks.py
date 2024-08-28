@@ -15,7 +15,7 @@ from activation_functions import functions
 
 class NonExistentNodeError(Exception):
     """
-    Exception that is called when _calculate_node_position is called
+    Exception that is raised when _calculate_node_position is called
     on a node position that does not exist in HyperNEAT network
     """
     pass
@@ -23,7 +23,7 @@ class NonExistentNodeError(Exception):
 
 class InvalidNetworkVectorError(Exception):
     """
-    Exception that is called when a vector that represents
+    Exception that is raised when a vector that represents
     a network's weights and biases is of incorrect size
     """
     pass
