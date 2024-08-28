@@ -1,3 +1,11 @@
+"""
+This module contains implementations of neural networks
+needed for the neuroevolution algorithms
+
+The networks are represented as objects, all networks inherit
+from NeuralNetwork class for consistency
+"""
+
 from neat.nn.feed_forward import FeedForwardNetwork
 from abc import ABC
 from abc import abstractmethod
@@ -6,14 +14,25 @@ from activation_functions import functions
 
 
 class NonExistentNodeError(Exception):
+    """
+    Exception that is called when _calculate_node_position is called
+    on a node position that does not exist in HyperNEAT network
+    """
     pass
 
 
 class InvalidNetworkVectorError(Exception):
+    """
+    Exception that is called when a vector that represents
+    a network's weights and biases is of incorrect size
+    """
     pass
 
 
 class NeuralNetwork(ABC):
+    """
+    Abstract class that all networks inherit from
+    """
 
     @abstractmethod
     def __call__(self, input_data):
@@ -31,25 +50,51 @@ class NeuralNetwork(ABC):
 
 
 class NEATNetwork(NeuralNetwork):
+    """
+    Class that inherits from NeuralNetwork class
+    and wraps neat-python network in order to make it
+    consistent with other types of networks
+    """
 
     def __init__(self, genome, config, training_individuals, training_generations):
+        """
+        Initializes variables that belong to the class
+        """
         self._network = FeedForwardNetwork.create(genome, config)
         self._training_individuals = training_individuals
         self._training_generations = training_generations
 
     def __call__(self, input_data):
+        """
+        Returns output of the network that
+        corresponds to the given input
+        """
         output_data = self._network.activate(input_data)
         return output_data
 
     def __str__(self):
+        """
+        Returns a string with information about the network
+
+        This method is called when NEATNetwork object is converted to string
+        """
         return f'A network created by the NEAT algoritm that is a result ' \
                f'of training {self._training_individuals} individuals ' \
                f'for {self._training_generations} generations'
 
 
 class HyperNEATNetwork2D(NeuralNetwork):
+    """
+    Class that represents a HyperNEAT network and
+    inherits from NeuralNetwork class in order
+    to be consistent with other types of networks
+    """
 
     def __init__(self, genome, cppn_config, substrate_config, training_individuals, training_generations):
+        """
+        Initializes variables that belong to the class
+        and finds weights of the network
+        """
         self._cppn = FeedForwardNetwork.create(genome, cppn_config)
         self._substrate_config = substrate_config
         self._training_individuals = training_individuals
@@ -61,35 +106,51 @@ class HyperNEATNetwork2D(NeuralNetwork):
         self._output_activation_function = functions[self._substrate_config.activation_output]
 
     def _calculate_node_position(self, node_layer, node_number):
-        # node number from the top of the layer
-        # layer 0 is the input
-        # n layers, layer n+1 is the output
+        """
+        Takes the position of the node in the network and calculates
+        and returns its geometric position normalized between -1 and 1
+        """
+
+        # inside a layer, nodes are numbered from top of the layer
+        # layer 0 is the input, (n+1)-th layer is the output layer
 
         max_layer_number = self._substrate_config.hidden_layers + 1
 
         # if the node is in one of the hidden layers
         if 0 < node_layer < max_layer_number:
             max_node_number = self._substrate_config.hidden_layer_size - 1
+
         # if the node is in the input layer
         elif node_layer == 0:
             max_node_number = self._substrate_config.num_inputs - 1
+
         # if the node is in the output layer
         elif node_layer == max_layer_number:
             max_node_number = self._substrate_config.num_outputs - 1
+
         # if the node is not in an existing layer
         else:
             raise NonExistentNodeError(f'Node layer {node_layer} does not exist in the network')
 
         # normalize the node coordinates between -1 and 1
         x_coordinate = (node_layer / max_layer_number) * 2 - 1
-        if max_node_number > 0:
+
+        if node_number > max_node_number:
+            raise NonExistentNodeError(f'Node {node_number} does not exist in layer {node_layer}')
+        elif max_node_number > 0:
             y_coordinate = (node_number / max_node_number) * 2 - 1
         else:
-            y_coordinate = 0.5
+            # if there is only one node in the layer, set its y-coordinate to the middle
+            y_coordinate = 0
 
         return x_coordinate, y_coordinate
 
     def _find_input_weights(self):
+        """
+        Prompts the CPPN network to get the input weights
+        of the substrate network and returns them
+        """
+
         input_layer_size = self._substrate_config.num_inputs
         hidden_layer_size = self._substrate_config.hidden_layer_size
 
@@ -106,6 +167,11 @@ class HyperNEATNetwork2D(NeuralNetwork):
         return input_weights
 
     def _find_hidden_weights(self):
+        """
+        Prompts the CPPN network to get the weights
+        between hidden layers of the substrate
+        network and returns them
+        """
         n_hidden_layers = self._substrate_config.hidden_layers
         hidden_layer_size = self._substrate_config.hidden_layer_size
 
@@ -123,6 +189,10 @@ class HyperNEATNetwork2D(NeuralNetwork):
         return hidden_weights
 
     def _find_output_weights(self):
+        """
+        Prompts the CPPN network to get the output weights
+        of the substrate network and returns them
+        """
         hidden_layer_size = self._substrate_config.hidden_layer_size
         output_layer_size = self._substrate_config.num_outputs
         output_layer_number = self._substrate_config.hidden_layers + 1
@@ -140,6 +210,11 @@ class HyperNEATNetwork2D(NeuralNetwork):
         return input_weights
 
     def __call__(self, input_data):
+        """
+        Does forward propagation to calculate
+        the output of the network corresponding
+        to the given input and returns it
+        """
 
         if len(input_data) != self._substrate_config.num_inputs:
             raise RuntimeError(f'Expected {self._substrate_config.num_inputs} inputs, got {len(input_data)}')
@@ -157,9 +232,17 @@ class HyperNEATNetwork2D(NeuralNetwork):
         return x
 
     def get_cppn(self):
+        """
+        Returns the CPPN that produced weights for the substrate
+        """
         return self._cppn
 
     def __str__(self):
+        """
+        Returns a string with information about the network
+
+        This method is called when a HyperNEATNetwork2D object is converted to string
+        """
         hidden_layers = self._substrate_config.hidden_layers
         layer_nodes = self._substrate_config.hidden_layer_size
 
@@ -171,8 +254,21 @@ class HyperNEATNetwork2D(NeuralNetwork):
 
 
 class FixedTopologyNetwork(NeuralNetwork):
+    """
+    Class that represents a fixed topology neutral
+    network and inherits from NeuralNetwork class in order
+    to be consistent with other types of networks
+    """
 
     def __init__(self, weight_vector, config, algorithm_name='unknown'):
+        """
+        Initializes variables that belong to the class
+        and finds weights and biases of the network
+
+        Raises an exception if the weight vector is
+        of incorrect length
+        """
+
         self._config = config
 
         expected_vector_size = FixedTopologyNetwork.get_vectorized_size(config)
@@ -190,6 +286,10 @@ class FixedTopologyNetwork(NeuralNetwork):
         self._vectorized_network = weight_vector
 
     def _find_input_weights(self, weight_vector):
+        """
+        Extracts input weights from the
+        weight vector and returns them
+        """
         input_layer_size = self._config.num_inputs
         hidden_layer_size = self._config.hidden_layer_size
 
@@ -201,6 +301,11 @@ class FixedTopologyNetwork(NeuralNetwork):
         return input_weights
 
     def _find_hidden_weights(self, weight_vector):
+        """
+        Extracts weights for connections
+        between hidden layers of the network
+        from the weight vector and returns them
+        """
         hidden_layer_size = self._config.hidden_layer_size
         input_layer_size = self._config.num_inputs
 
@@ -215,6 +320,10 @@ class FixedTopologyNetwork(NeuralNetwork):
         return hidden_weights
 
     def _find_output_weights(self, weight_vector):
+        """
+        Extracts output weights from the
+        weight vector and returns them
+        """
         hidden_layer_size = self._config.hidden_layer_size
         output_layer_size = self._config.num_outputs
 
@@ -232,6 +341,10 @@ class FixedTopologyNetwork(NeuralNetwork):
         return input_weights
 
     def _find_hidden_biases(self, weight_vector):
+        """
+        Extracts biases for nodes in hidden layers
+        from the weight vector and returns them
+        """
         hidden_layer_size = self._config.hidden_layer_size
         n_hidden_layers = self._config.hidden_layers
 
@@ -244,6 +357,10 @@ class FixedTopologyNetwork(NeuralNetwork):
         return hidden_biases
 
     def _find_output_biases(self, weight_vector):
+        """
+        Extracts biases for nodes in the output layer
+        from the weight vector and returns them
+        """
         output_layer_size = self._config.num_outputs
 
         output_biases = weight_vector[-output_layer_size:]
@@ -251,6 +368,10 @@ class FixedTopologyNetwork(NeuralNetwork):
 
     @staticmethod
     def get_vectorized_size(config):
+        """
+        Calculates the size of the vector that represents
+        the network's weights and biases
+        """
         input_layer_size = config.num_inputs
         hidden_layer_size = config.hidden_layer_size
         n_hidden_layers = config.hidden_layers
@@ -266,6 +387,11 @@ class FixedTopologyNetwork(NeuralNetwork):
         return num_input_weights + num_hidden_weights + num_output_weights + num_hidden_biases + num_output_biases
 
     def __call__(self, input_data):
+        """
+        Does forward propagation to calculate
+        the output of the network corresponding
+        to the given input and returns it
+        """
 
         if len(input_data) != self._config.num_inputs:
             raise RuntimeError(f'Expected {self._config.num_inputs} inputs, got {len(input_data)}')
@@ -286,6 +412,10 @@ class FixedTopologyNetwork(NeuralNetwork):
         return x
 
     def get_vectorized_network(self):
+        """
+        Returns the vector that represents
+        the network's weights and biases
+        """
         return self._vectorized_network
 
     def __str__(self):
