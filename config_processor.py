@@ -5,9 +5,9 @@ config files and dataclasses that store this information
 
 import re
 import tempfile
-import neat
 import os
 from dataclasses import dataclass
+import neat
 
 
 class DuplicateOptionError(Exception):
@@ -64,13 +64,14 @@ def extract_value(variable_name, variable_type, config_file):
     An exception is also raised is the listed value
     cannot be converted to the specified type
     """
-    with open(config_file, 'r') as f:
+    with open(config_file, 'r', encoding='utf8') as f:
         config_text = f.read()
 
-    occurences = re.findall(fr'(?:^|\n){variable_name}\s*=\s*([-+]?\d+(?:\.\d*)?|[a-zA-Z]+)', config_text)
+    occurences = re.findall(
+        fr'(?:^|\n){variable_name}\s*=\s*([-+]?\d+(?:\.\d*)?|[a-zA-Z]+)', config_text)
     if len(occurences) == 0:
         raise RuntimeError(f'Missing configuration item: {variable_name}')
-    elif len(occurences) > 1:
+    if len(occurences) > 1:
         raise DuplicateOptionError(f'Option \'{variable_name}\' is listed more than once')
 
     search_result = variable_type(occurences[0])
@@ -87,7 +88,7 @@ def check_line_name(names, line):
     """
     # handles inputs that are given in string format
     # instead of a list of strings
-    if type(names) == str:
+    if isinstance(names, str):
         names = [names]
 
     for name in names:
@@ -128,7 +129,7 @@ def create_hyperneat_cppn_config(config_file, n_substrate_dimensions):
     with tempfile.NamedTemporaryFile(mode='w+t', delete=False) as temp_file:
         temp_filename = temp_file.name
 
-        with open(config_file, 'r') as f:
+        with open(config_file, 'r', encoding='utf8') as f:
 
             irrelevant_parameters = (
                 'num_inputs',
