@@ -20,6 +20,7 @@ def get_config_file_path(environment_name, algorithm_name):
 
     Raises an exception if the file does not exist
     """
+
     file_path = os.path.join(
         'config_files',
         environment_name,
