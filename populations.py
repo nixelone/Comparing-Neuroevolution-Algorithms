@@ -12,12 +12,12 @@ There is also a dictionary where all population classes
 can be accessed using the algorithm's string name
 """
 
-import neat
 from abc import ABC
 from abc import abstractmethod
 import multiprocessing
 from functools import partial
 import numpy as np
+import neat
 from deap import algorithms
 from deap import creator
 from deap import base
@@ -129,8 +129,11 @@ class NEATTypePopulation(NeuralNetworkPopulation, ABC):
 
             Uses multiprocessing to speed up the evaluation
             """
-            eval_function = partial(self._evaluate_genome,
-                                    config=config, fitness_function=fitness_function)
+            eval_function = partial(
+                self._evaluate_genome,
+                config=config,
+                fitness_function=fitness_function
+            )
             with multiprocessing.Pool(processes=n_processes) as pool:
                 fitnesses = pool.map(eval_function, [genome for _, genome in genomes])
 
@@ -157,8 +160,7 @@ class NEATTypePopulation(NeuralNetworkPopulation, ABC):
             winning_genome = self._population.best_genome
             winning_network = self._create_network(winning_genome, self._population.config)
             return winning_network
-        else:
-            raise NoWinnerNetworkError('The population has not been trained yet')
+        raise NoWinnerNetworkError('The population has not been trained yet')
 
 
 class NEATPopulation(NEATTypePopulation):
@@ -238,7 +240,8 @@ class HyperNEATPopulation2D(NEATTypePopulation):
         population_size = len(self._population.population)
         generation = self._population.generation
 
-        network = HyperNEATNetwork2D(genome, config, self.substrate_config, population_size, generation)
+        network = HyperNEATNetwork2D(
+            genome, config, self.substrate_config, population_size, generation)
         return network
 
     def __str__(self):
@@ -332,7 +335,11 @@ class CMAESNetworkPopulation(NeuralNetworkPopulation):
         Uses multiprocessing to speed up the process
         """
 
-        eval_function = partial(self._evaluate_fitness, fitness_function=fitness_function, network_config=self._network_config)
+        eval_function = partial(
+            self._evaluate_fitness,
+            fitness_function=fitness_function,
+            network_config=self._network_config
+        )
         self._toolbox.register('evaluate', eval_function)
 
         with multiprocessing.Pool(processes=n_processes) as pool:
@@ -359,10 +366,10 @@ class CMAESNetworkPopulation(NeuralNetworkPopulation):
 
         if self._n_generations > 0:
             winning_genome = self._hall_of_fame[0]
-            winning_network = FixedTopologyNetwork(winning_genome, self._network_config, algorithm_name='cma-es')
+            winning_network = FixedTopologyNetwork(
+                winning_genome, self._network_config, algorithm_name='cma-es')
             return winning_network
-        else:
-            raise NoWinnerNetworkError('The population has not been trained yet')
+        raise NoWinnerNetworkError('The population has not been trained yet')
 
     def __str__(self):
         """
@@ -403,7 +410,8 @@ class DifferentialEvolutionNetworkPopulation(NeuralNetworkPopulation):
         Evaluates and returns the fitness of a neural network
         """
 
-        network = FixedTopologyNetwork(weight_vector, self._network_config, algorithm_name='differential evolution')
+        network = FixedTopologyNetwork(
+            weight_vector, self._network_config, algorithm_name='differential evolution')
         return -fitness_function(network)
 
     def _reporting_function(self, _, convergence):
@@ -425,7 +433,10 @@ class DifferentialEvolutionNetworkPopulation(NeuralNetworkPopulation):
         if self._population is not None:
             init = self._population
 
-        eval_function = partial(self._evaluate_fitness, fitness_function=fitness_function)
+        eval_function = partial(
+            self._evaluate_fitness,
+            fitness_function=fitness_function
+        )
         result = differential_evolution(
             eval_function,
             self._bounds,
@@ -449,10 +460,10 @@ class DifferentialEvolutionNetworkPopulation(NeuralNetworkPopulation):
         """
 
         if self._winning_genome is not None:
-            winning_network = FixedTopologyNetwork(self._winning_genome, self._network_config, algorithm_name='differential evolution')
+            winning_network = FixedTopologyNetwork(
+                self._winning_genome, self._network_config, algorithm_name='differential evolution')
             return winning_network
-        else:
-            raise NoWinnerNetworkError('The population has not been trained yet')
+        raise NoWinnerNetworkError('The population has not been trained yet')
 
     def __str__(self):
         """
@@ -460,8 +471,8 @@ class DifferentialEvolutionNetworkPopulation(NeuralNetworkPopulation):
         Is called when a DifferentialEvolutionNetworkPopulation object is converted to string
         """
 
-        return f'A NEFT population of {self._de_config.population_size} individuals that has been trained ' \
-               f'for {self._n_generations} generations by differential evolution'
+        return f'A NEFT population of {self._de_config.population_size} individuals that has ' \
+               f'been trained for {self._n_generations} generations by differential evolution'
 
 
 populations = {
