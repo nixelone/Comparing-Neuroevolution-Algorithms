@@ -85,6 +85,3 @@ substrate_hidden_layers = 10
 substrate_layer_size = 10
 activation_substrate_hidden = sigmoid
 activation_substrate_output = sigmoid
-substrate_weight_threshold = 0
-substrate_max_weight = 1
-substrate_min_weight = -1
