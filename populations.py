@@ -272,6 +272,7 @@ class CMAESNetworkPopulation(NeuralNetworkPopulation):
 
         network_size = FixedTopologyNetwork.get_vectorized_size(self._network_config)
         if centroid is None:
+            # initialize centroid as zero vector if nothing is specified
             centroid = np.zeros(network_size)
         elif len(centroid) != network_size:
             raise InvalidCentroidError(f'Length of the centroid should be {network_size}')
