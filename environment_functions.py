@@ -6,6 +6,7 @@ where all fitness functions can be accessed by the environment's string name
 
 import numpy as np
 import gymnasium as gym
+
 from populations import populations
 from config_manipulator import get_config_file_path
 
