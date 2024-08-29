@@ -10,6 +10,7 @@ from neat.nn.feed_forward import FeedForwardNetwork
 from abc import ABC
 from abc import abstractmethod
 import numpy as np
+
 from activation_functions import functions
 
 
