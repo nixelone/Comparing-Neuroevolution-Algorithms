@@ -1,0 +1,7 @@
+numpy
+scipy
+Pillow
+gymnasium[classic_control]
+gymnasium[box2d]
+deap
+neat-python
