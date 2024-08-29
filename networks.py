@@ -6,10 +6,10 @@ The networks are represented as objects, all networks inherit
 from NeuralNetwork class for consistency
 """
 
-from neat.nn.feed_forward import FeedForwardNetwork
 from abc import ABC
 from abc import abstractmethod
 import numpy as np
+from neat.nn.feed_forward import FeedForwardNetwork
 
 from activation_functions import functions
 
@@ -91,7 +91,8 @@ class HyperNEATNetwork2D(NeuralNetwork):
     to be consistent with other types of networks
     """
 
-    def __init__(self, genome, cppn_config, substrate_config, training_individuals, training_generations):
+    def __init__(self, genome, cppn_config, substrate_config,
+                 training_individuals, training_generations):
         """
         Initializes variables that belong to the class
         and finds weights of the network
@@ -138,7 +139,7 @@ class HyperNEATNetwork2D(NeuralNetwork):
 
         if node_number > max_node_number:
             raise NonExistentNodeError(f'Node {node_number} does not exist in layer {node_layer}')
-        elif max_node_number > 0:
+        if max_node_number > 0:
             y_coordinate = (node_number / max_node_number) * 2 - 1
         else:
             # if there is only one node in the layer, set its y-coordinate to the middle
@@ -158,8 +159,14 @@ class HyperNEATNetwork2D(NeuralNetwork):
         input_weights = np.zeros((hidden_layer_size, input_layer_size))
         for weight_input in range(input_layer_size):
             for weight_output in range(hidden_layer_size):
-                in_x, in_y = self._calculate_node_position(node_layer=0, node_number=weight_input)
-                out_x, out_y = self._calculate_node_position(node_layer=1, node_number=weight_output)
+                in_x, in_y = self._calculate_node_position(
+                    node_layer=0,
+                    node_number=weight_input
+                )
+                out_x, out_y = self._calculate_node_position(
+                    node_layer=1,
+                    node_number=weight_output
+                )
                 cppn_input = [in_x, in_y, out_x, out_y]
 
                 cppn_output = self._cppn.activate(cppn_input)[0]
@@ -201,8 +208,14 @@ class HyperNEATNetwork2D(NeuralNetwork):
         input_weights = np.zeros((output_layer_size, hidden_layer_size))
         for weight_input in range(hidden_layer_size):
             for weight_output in range(output_layer_size):
-                in_x, in_y = self._calculate_node_position(node_layer=output_layer_number - 1, node_number=weight_input)
-                out_x, out_y = self._calculate_node_position(node_layer=output_layer_number, node_number=weight_output)
+                in_x, in_y = self._calculate_node_position(
+                    node_layer=output_layer_number - 1,
+                    node_number=weight_input
+                )
+                out_x, out_y = self._calculate_node_position(
+                    node_layer=output_layer_number,
+                    node_number=weight_output
+                )
                 cppn_input = [in_x, in_y, out_x, out_y]
 
                 cppn_output = self._cppn.activate(cppn_input)[0]
@@ -218,7 +231,8 @@ class HyperNEATNetwork2D(NeuralNetwork):
         """
 
         if len(input_data) != self._substrate_config.num_inputs:
-            raise RuntimeError(f'Expected {self._substrate_config.num_inputs} inputs, got {len(input_data)}')
+            raise RuntimeError(
+                f'Expected {self._substrate_config.num_inputs} inputs, got {len(input_data)}')
 
         x = np.dot(self._input_weights, input_data)
         x = self._hidden_activation_function(x)
@@ -274,7 +288,8 @@ class FixedTopologyNetwork(NeuralNetwork):
 
         expected_vector_size = FixedTopologyNetwork.get_vectorized_size(config)
         if len(weight_vector) != expected_vector_size:
-            raise InvalidNetworkVectorError(f'Weight vector should be of length {expected_vector_size}')
+            raise InvalidNetworkVectorError(
+                f'Weight vector should be of length {expected_vector_size}')
 
         self._input_weights = self._find_input_weights(weight_vector)
         self._hidden_weights = self._find_hidden_weights(weight_vector)
@@ -315,9 +330,11 @@ class FixedTopologyNetwork(NeuralNetwork):
         num_input_weights = input_layer_size * hidden_layer_size
         num_hidden_weights = (n_hidden_layers - 1) * hidden_layer_size * hidden_layer_size
 
-        hidden_weight_vector = weight_vector[num_input_weights: num_input_weights + num_hidden_weights]
+        hidden_weight_vector = \
+            weight_vector[num_input_weights: num_input_weights + num_hidden_weights]
 
-        hidden_weights = hidden_weight_vector.reshape((n_hidden_layers - 1, hidden_layer_size, hidden_layer_size))
+        hidden_weights = hidden_weight_vector.reshape(
+            (n_hidden_layers - 1, hidden_layer_size, hidden_layer_size))
         return hidden_weights
 
     def _find_output_weights(self, weight_vector):
@@ -335,8 +352,9 @@ class FixedTopologyNetwork(NeuralNetwork):
         num_hidden_weights = (n_hidden_layers - 1) * hidden_layer_size * hidden_layer_size
         num_output_weights = hidden_layer_size * output_layer_size
 
-        output_weight_vector = weight_vector[num_input_weights + num_hidden_weights:
-                                             num_input_weights + num_hidden_weights + num_output_weights]
+        output_weight_vector = \
+            weight_vector[num_input_weights + num_hidden_weights:
+                          num_input_weights + num_hidden_weights + num_output_weights]
 
         input_weights = output_weight_vector.reshape((output_layer_size, hidden_layer_size))
         return input_weights
@@ -352,7 +370,8 @@ class FixedTopologyNetwork(NeuralNetwork):
         output_layer_size = self._config.num_outputs
 
         num_hidden_biases = n_hidden_layers * hidden_layer_size
-        hidden_bias_vector = weight_vector[-num_hidden_biases - output_layer_size: -output_layer_size]
+        hidden_bias_vector = \
+            weight_vector[-num_hidden_biases - output_layer_size: -output_layer_size]
 
         hidden_biases = hidden_bias_vector.reshape((n_hidden_layers, hidden_layer_size))
         return hidden_biases
@@ -385,7 +404,8 @@ class FixedTopologyNetwork(NeuralNetwork):
         num_hidden_biases = n_hidden_layers * hidden_layer_size
         num_output_biases = output_layer_size
 
-        return num_input_weights + num_hidden_weights + num_output_weights + num_hidden_biases + num_output_biases
+        return num_input_weights + num_hidden_weights + num_output_weights + \
+               num_hidden_biases + num_output_biases
 
     def __call__(self, input_data):
         """
