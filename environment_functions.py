@@ -24,11 +24,12 @@ def acrobot_fitness_function(network):
     env = gym.make('Acrobot-v1')
     env.reset()
 
-    observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
+    observation, _, terminated, truncated, _ = env.step(env.action_space.sample())
 
     # constant 3 chosen so that the lowest possible value of uppermost is 0
     # therefore uppermost is scaled to the range [0, 6]
-    uppermost = 3 - observation[0] - observation[0] * observation[2] + observation[1] * observation[3]
+    uppermost = \
+        3 - observation[0] - observation[0] * observation[2] + observation[1] * observation[3]
 
     time = 0
     done = False
@@ -71,7 +72,7 @@ def cart_pole_fitness_function(network):
     done = False
     while not done:
         action = np.argmax(network(observation))
-        observation, reward, terminated, truncated, info = env.step(action)
+        observation, _, terminated, truncated, _ = env.step(action)
 
         fitness += 1
 
@@ -104,7 +105,7 @@ def mountain_car_fitness_function(network):
     done = False
     while not done:
         action = np.argmax(network(observation))
-        observation, reward, terminated, truncated, info = env.step(action)
+        observation, _, terminated, truncated, _ = env.step(action)
 
         rightmost = max(
             rightmost,
@@ -147,7 +148,7 @@ def lunar_lander_fitness_function(network):
         done = False
         while not done:
             action = np.argmax(network(observation))
-            observation, reward, terminated, truncated, info = env.step(action)
+            observation, reward, terminated, truncated, _ = env.step(action)
 
             fitnesses[i] += reward
 
@@ -175,12 +176,22 @@ def evolve_network(environment_name, algorithm_name, n_generations, multiprocess
 
     Returns the most fit network at the end of the last iteration of the evolution
     """
-    population = populations[algorithm_name](get_config_file_path(environment_name, algorithm_name), reporter=reporter)
+    population = populations[algorithm_name](
+        get_config_file_path(environment_name, algorithm_name),
+        reporter=reporter
+    )
 
     if multiprocessing:
-        population.train(fitness_functions[environment_name], n_generations=n_generations)
+        population.train(
+            fitness_functions[environment_name],
+            n_generations=n_generations
+        )
     else:
-        population.train(fitness_functions[environment_name], n_generations=n_generations, n_processes=1)
+        population.train(
+            fitness_functions[environment_name],
+            n_generations=n_generations,
+            n_processes=1
+        )
 
     winner_net = population.get_winning_network()
 
@@ -209,7 +220,7 @@ def render_game(game_name, network):
     env = gym.make(environment_names[game_name], render_mode='rgb_array')
     env.reset()
 
-    observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
+    observation, _, terminated, truncated, _ = env.step(env.action_space.sample())
 
     done = False
     while not done:
