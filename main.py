@@ -8,14 +8,14 @@ In order for the user to be able to use the GUI window while an algorithm is bei
 the training function is implemented in such a way that it runs on a different thread.
 """
 
-import tkinter as tk
-from tkinter import ttk
-from PIL import Image, ImageTk
 import os
 import sys
 import subprocess
 import threading
 from queue import Queue
+import tkinter as tk
+from tkinter import ttk
+from PIL import Image, ImageTk
 
 from environment_functions import evolve_network
 from environment_functions import render_game
@@ -130,7 +130,8 @@ class MainWindow(tk.Tk):
             command=restore_all_default_configs
         )
 
-        # initialize spinbox to set the number of generations, restrict user input to numbers, initialize value to 10
+        # initialize spinbox to set the number of generations,
+        # restrict user input to numbers, initialize value to 10
         generation_spinbox_label = ttk.Label(
             self,
             text='Generations: ',
@@ -301,7 +302,7 @@ class MainWindow(tk.Tk):
 
         This method is called periodically while algorithm is being trained
         """
-        CHECKING_FREQUENCY = 500  # the method is called every 0.5s while the algorithm is being trained
+        CHECKING_FREQUENCY = 500  # the method is called every 0.5s during training
 
         if self.queue.empty():
             self.after(CHECKING_FREQUENCY, self._wait_for_training)
@@ -368,9 +369,9 @@ class MainWindow(tk.Tk):
         if sys.platform == 'win32':  # For Windows
             os.startfile(config_path)
         elif sys.platform == 'darwin':  # For macOS
-            subprocess.run(['open', config_path])
+            subprocess.run(['open', config_path], check=False)
         elif sys.platform == 'linux':  # For Linux
-            subprocess.run(['xdg-open', config_path])
+            subprocess.run(['xdg-open', config_path], check=False)
         else:
             raise NotImplementedError("Unsupported operating system")
 
