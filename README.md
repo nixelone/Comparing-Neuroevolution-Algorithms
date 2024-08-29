@@ -7,13 +7,13 @@ This program provides a simple GUI that allows the user to choose an environment
 ![example image](./images/example-image.png)
 
 ## Requirements
-To install all needed prerequisites, all you have to do is run `pip install -r requirements.txt`
+To install all Python libraries, all you have to do is run `pip install -r requirements.txt`. If you run into ERROR: Failed building wheel for box2d-py, make sure you have [SWIG](https://www.swig.org/download.html) installed. 
 
 ## How to use the program
-To learn how to use the program, refer to the [User's documentation](./docs/user.md)
+To learn how to use the program, refer to the [User's documentation](./docs/user.md). 
 
 ## How to edit the program
-To learn how the program is structured, refer to the [Programmer's documentation](./docs/programmer.md)
+To learn how the program is structured, refer to the [Programmer's documentation](./docs/programmer.md). 
 
 ### Author
 Marko Hlavatý
@@ -22,4 +22,4 @@ Marko Hlavatý
 This is my second-semester project for my programming class. We were allowed to choose our own theme, so I picked neuroevolution because the subject fascinates me, and I wanted to learn more about it.
 
 ### Support
-If you have any questions or comments about the project, send me an email at marko.hlavaty@gmail.com
+If you have any questions or comments about the project, send me an email at marko.hlavaty@gmail.com. 
